@@ -1,3 +1,3 @@
-export function openCensusHello() {
-  window.alert('hi2');
+export function startOpenCensusWeb() {
+  window.alert('hi3');
 }
