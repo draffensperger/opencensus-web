@@ -1,3 +1,3 @@
 export function startOpenCensusWeb() {
-  window.alert('hi3');
+  window.alert('hi4');
 }

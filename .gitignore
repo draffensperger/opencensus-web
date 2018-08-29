@@ -21,5 +21,8 @@ bin
 # Other
 TAGS
 
+# NPM modules
 node_modules
+
+# TypeScript build files
 build
