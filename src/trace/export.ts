@@ -1,5 +1,7 @@
+import {Span} from './span';
+
 export interface SpanExporter {
-  exportSpan(span: Span);
+  exportSpan(span: Span): void;
 }
 
 const exporters: SpanExporter[] = [];
@@ -10,7 +12,7 @@ export function registerExporter(exporter: SpanExporter) {
 
 export function unregisterExporter(exporter: SpanExporter) {
   const index = exporters.indexOf(exporter);
-  list.splice( list.indexOf('foo'), 1 );
+  if (index > 0) exporters.splice(index, 1);
 }
 
 export function exportSpan(spans: Span) {}
