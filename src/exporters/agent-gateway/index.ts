@@ -26,28 +26,3 @@ class AgentGatewayExporter implements SpanExporter {
     };
   }
 }
-
-function apiSpanForModel(modelSpan: modelTypes.Span): apiTypes.Span {
-  const apiSpan: apiTypes.Span = {};
-  return apiSpan;
-}
-
-function hexToBase64(hexStr: string): string {
-  return '';
-}
-
-function perfTimeDateStr(timeOrigin: number, time: number): string {
-  const originMillisWhole = Math.floor(timeOrigin);
-  const originMillisFrac = timeOrigin - originMillisWhole;
-  const timeMillisWhole = Math.floor(time);
-  const timeMillisFrac = time - timeMillisWhole;
-  let combinedMillisWhole = originMillisWhole + timeMillisWhole;
-  let combinedMillisFrac = timeMillisFrac + originMillisFrac;
-  combinedMillisWhole += Math.floor(combinedMillisFrac);
-  combinedMillisFrac -= Math.floor(combinedMillisFrac);
-  const wholeMillisDateStr = new Date(combinedMillisWhole).toISOString();
-  const wholeMillisDateStrWithoutZ =
-      wholeMillisDateStr.substr(0, wholeMillisDateStr.length - 1);
-  const millisFracStr = String(combinedMillisFrac).substr(2, 3);
-  return `${wholeMillisDateStrWithoutZ}${millisFracStr}Z`;
-}

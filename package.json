@@ -1,8 +1,7 @@
 {
   "name": "@opencensus/opencensus-web",
   "version": "0.0.1",
-  "description":
-    "OpenCensus is a toolkit for collecting application performance and behavior data.",
+  "description": "OpenCensus is a toolkit for collecting application performance and behavior data.",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
   "repository": "census-instrumentation/opencensus-web",
@@ -16,10 +15,18 @@
     "test": "karma start --single-run --browsers ChromeHeadless",
     "test:start": "karma start"
   },
-  "keywords": ["opencensus", "tracing"],
+  "keywords": [
+    "opencensus",
+    "tracing"
+  ],
   "author": "OpenCensus Authors",
   "license": "Apache-2.0",
-  "files": ["build/src/**/*.js", "build/src/**/*.d.ts", "LICENSE", "README.md"],
+  "files": [
+    "build/src/**/*.js",
+    "build/src/**/*.d.ts",
+    "LICENSE",
+    "README.md"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -29,6 +36,7 @@
     "jasmine-core": "^3.2.1",
     "karma": "^3.0.0",
     "karma-chrome-launcher": "^2.2.0",
+    "karma-commonjs": "^1.0.0",
     "karma-jasmine": "^1.1.2",
     "karma-typescript": "^3.0.13",
     "typescript": "~2.7.2"
