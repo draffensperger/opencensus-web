@@ -13,6 +13,103 @@ export interface ExportSpansRequest {
  */
 export interface ExportSpansResponse {}
 
+/**
+ * A span represents a single operation within a trace. Spans can be nested to
+ * form a trace tree. Often, a trace contains a root span that describes the
+ * end-to-end latency, and one or more subspans for its sub-operations. A trace
+ * can also contain multiple root spans, or none at all. Spans do not need to be
+ * contiguous - there may be gaps or overlaps between spans in a trace.  The
+ * next id is 16. TODO(bdrutu): Add an example.
+ */
+export interface Span {
+  /**
+   * A unique identifier for a trace. All spans from the same trace share the
+   * same `trace_id`. The ID is a 16-byte array.  This field is required.
+   */
+  traceId?: string;
+  /**
+   * A unique identifier for a span within a trace, assigned when the span is
+   * created. The ID is an 8-byte array.  This field is required.
+   */
+  spanId?: string;
+  /**
+   * The `tracestate` field conveys information about request position in
+   * multiple distributed tracing graphs.  There can be a maximum of 32 members
+   * in the map.  The key must begin with a lowercase letter, and can only
+   * contain lowercase letters 'a'-'z', digits '0'-'9', underscores '_', dashes
+   * '-', asterisks '*', and forward slashes '/'. For multi-tenant vendors
+   * scenarios '@' sign can be used to prefix vendor name. The maximum length
+   * for the key is 256 characters.  The value is opaque string up to 256
+   * characters printable ASCII RFC0020 characters (i.e., the range 0x20 to
+   * 0x7E) except ',' and '='. Note that this also excludes tabs, newlines,
+   * carriage returns, etc.  See the https://github.com/w3c/distributed-tracing
+   * for more details about this field.
+   */
+  tracestate?: {[key: string]: string;};
+  /**
+   * The `span_id` of this span's parent span. If this is a root span, then this
+   * field must be empty. The ID is an 8-byte array.
+   */
+  parentSpanId?: string;
+  /**
+   * A description of the span's operation.  For example, the name can be a
+   * qualified method name or a file name and a line number where the operation
+   * is called. A best practice is to use the same display name at the same call
+   * point in an application. This makes it easier to correlate spans in
+   * different traces.  This field is required.
+   */
+  name?: TruncatableString;
+  /**
+   * Distinguishes between spans generated in a particular context. For example,
+   * two spans with the same name may be distinguished using `CLIENT` and
+   * `SERVER` to identify queueing latency associated with the span.
+   */
+  kind?: SpanKind;
+  /**
+   * The start time of the span. On the client side, this is the time kept by
+   * the local machine where the span execution starts. On the server side, this
+   * is the time when the server's application handler starts running.
+   */
+  startTime?: Date;
+  /**
+   * The end time of the span. On the client side, this is the time kept by the
+   * local machine where the span execution ends. On the server side, this is
+   * the time when the server application handler stops running.
+   */
+  endTime?: Date;
+  /**
+   * A set of attributes on the span.
+   */
+  attributes?: Attributes;
+  /**
+   * A stack trace captured at the start of the span.
+   */
+  stackTrace?: StackTrace;
+  /**
+   * The included time events.
+   */
+  timeEvents?: TimeEvents;
+  /**
+   * The inclued links.
+   */
+  links?: SpanLinks;
+  /**
+   * An optional final status for this span.
+   */
+  status?: Status;
+  /**
+   * A highly recommended but not required flag that identifies when a trace
+   * crosses a process boundary. True when the parent_span belongs to the same
+   * process as the current span.
+   */
+  sameProcessAsParentSpan?: boolean;
+  /**
+   * An optional number of child spans that were generated while this span was
+   * active. If set, allows an implementation to detect missing child spans.
+   */
+  childSpanCount?: number;
+}
+
 
 /**
  * A set of attributes, each with a key and a value.
@@ -276,103 +373,6 @@ export interface TraceModule {
    * A unique identifier for the module, usually a hash of its contents.
    */
   buildId?: TruncatableString;
-}
-
-/**
- * A span represents a single operation within a trace. Spans can be nested to
- * form a trace tree. Often, a trace contains a root span that describes the
- * end-to-end latency, and one or more subspans for its sub-operations. A trace
- * can also contain multiple root spans, or none at all. Spans do not need to be
- * contiguous - there may be gaps or overlaps between spans in a trace.  The
- * next id is 16. TODO(bdrutu): Add an example.
- */
-export interface Span {
-  /**
-   * A unique identifier for a trace. All spans from the same trace share the
-   * same `trace_id`. The ID is a 16-byte array.  This field is required.
-   */
-  traceId?: string;
-  /**
-   * A unique identifier for a span within a trace, assigned when the span is
-   * created. The ID is an 8-byte array.  This field is required.
-   */
-  spanId?: string;
-  /**
-   * The `tracestate` field conveys information about request position in
-   * multiple distributed tracing graphs.  There can be a maximum of 32 members
-   * in the map.  The key must begin with a lowercase letter, and can only
-   * contain lowercase letters 'a'-'z', digits '0'-'9', underscores '_', dashes
-   * '-', asterisks '*', and forward slashes '/'. For multi-tenant vendors
-   * scenarios '@' sign can be used to prefix vendor name. The maximum length
-   * for the key is 256 characters.  The value is opaque string up to 256
-   * characters printable ASCII RFC0020 characters (i.e., the range 0x20 to
-   * 0x7E) except ',' and '='. Note that this also excludes tabs, newlines,
-   * carriage returns, etc.  See the https://github.com/w3c/distributed-tracing
-   * for more details about this field.
-   */
-  tracestate?: {[key: string]: string;};
-  /**
-   * The `span_id` of this span's parent span. If this is a root span, then this
-   * field must be empty. The ID is an 8-byte array.
-   */
-  parentSpanId?: string;
-  /**
-   * A description of the span's operation.  For example, the name can be a
-   * qualified method name or a file name and a line number where the operation
-   * is called. A best practice is to use the same display name at the same call
-   * point in an application. This makes it easier to correlate spans in
-   * different traces.  This field is required.
-   */
-  name?: TruncatableString;
-  /**
-   * Distinguishes between spans generated in a particular context. For example,
-   * two spans with the same name may be distinguished using `CLIENT` and
-   * `SERVER` to identify queueing latency associated with the span.
-   */
-  kind?: SpanKind;
-  /**
-   * The start time of the span. On the client side, this is the time kept by
-   * the local machine where the span execution starts. On the server side, this
-   * is the time when the server's application handler starts running.
-   */
-  startTime?: Date;
-  /**
-   * The end time of the span. On the client side, this is the time kept by the
-   * local machine where the span execution ends. On the server side, this is
-   * the time when the server application handler stops running.
-   */
-  endTime?: Date;
-  /**
-   * A set of attributes on the span.
-   */
-  attributes?: Attributes;
-  /**
-   * A stack trace captured at the start of the span.
-   */
-  stackTrace?: StackTrace;
-  /**
-   * The included time events.
-   */
-  timeEvents?: TimeEvents;
-  /**
-   * The inclued links.
-   */
-  links?: SpanLinks;
-  /**
-   * An optional final status for this span.
-   */
-  status?: Status;
-  /**
-   * A highly recommended but not required flag that identifies when a trace
-   * crosses a process boundary. True when the parent_span belongs to the same
-   * process as the current span.
-   */
-  sameProcessAsParentSpan?: boolean;
-  /**
-   * An optional number of child spans that were generated while this span was
-   * active. If set, allows an implementation to detect missing child spans.
-   */
-  childSpanCount?: number;
 }
 
 /**
