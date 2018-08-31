@@ -56,7 +56,7 @@ export interface Span {
    * point in an application. This makes it easier to correlate spans in
    * different traces.  This field is required.
    */
-  name?: string;
+  name: string;
   /**
    * Distinguishes between spans generated in a particular context. For example,
    * two spans with the same name may be distinguished using `CLIENT` and
