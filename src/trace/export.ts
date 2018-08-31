@@ -1,4 +1,4 @@
-import {Span} from './span';
+import {Span} from './types';
 
 export interface SpanExporter {
   exportSpans(spans: Span[]): void;
