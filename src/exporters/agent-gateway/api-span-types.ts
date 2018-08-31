@@ -70,13 +70,13 @@ export interface Span {
    * the local machine where the span execution starts. On the server side, this
    * is the time when the server's application handler starts running.
    */
-  startTime?: Date;
+  startTime?: string;
   /**
    * The end time of the span. On the client side, this is the time kept by the
    * local machine where the span execution ends. On the server side, this is
    * the time when the server application handler stops running.
    */
-  endTime?: Date;
+  endTime?: string;
   /**
    * A set of attributes on the span.
    */
@@ -110,6 +110,9 @@ export interface Span {
   childSpanCount?: number;
 }
 
+export interface AttributeMap {
+  [key: string]: AttributeValue;
+}
 
 /**
  * A set of attributes, each with a key and a value.
@@ -119,7 +122,7 @@ export interface Attributes {
    * \"/instance_id\": \"my-instance\"     \"/http/user_agent\": \"\"
    * \"/http/server_latency\": 300     \"abc.com/myattribute\": true
    */
-  attributeMap?: {[key: string]: AttributeValue;};
+  attributeMap?: AttributeMap;
   /**
    * The number of attributes that were discarded. Attributes can be discarded
    * because their keys are too long or because there are too many attributes.
@@ -134,7 +137,7 @@ export interface Attributes {
  * a single batch handler processes multiple requests from different traces or
  * when the handler receives a request from a different project.
  */
-export interface Link {
+export interface SpanLink {
   /**
    * A unique identifier for a trace. All spans from the same trace share the
    * same `trace_id`. The ID is a 16-byte array.
@@ -176,7 +179,7 @@ export interface SpanLinks {
   /**
    * A collection of links.
    */
-  link?: Link[];
+  link?: SpanLink[];
   /**
    * The number of dropped links after the maximum size was enforced. If this
    * value is 0, then no links were dropped.
@@ -204,7 +207,7 @@ export interface TimeEvent {
   /**
    * The time the event occurred.
    */
-  time?: Date;
+  time?: string;
   /**
    * A text annotation with a set of attributes.
    */
@@ -268,7 +271,7 @@ export interface StackFrame {
   /**
    * The binary module from where the code was loaded.
    */
-  loadModule?: TraceModule;
+  loadModule?: Module;
   /**
    * The version of the deployed source code.
    */
@@ -363,7 +366,7 @@ export interface AttributeValue {
 /**
  * A description of a binary module.
  */
-export interface TraceModule {
+export interface Module {
   /**
    * TODO: document the meaning of this field. For example: main binary, kernel
    * modules, and dynamic libraries such as libc.so, sharedlib.so.
