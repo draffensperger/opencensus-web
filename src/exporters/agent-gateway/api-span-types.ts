@@ -163,9 +163,9 @@ export interface Link {
  * linked span is a parent of the current span.
  */
 export enum SpanLinkType {
-  TYPEUNSPECIFIED = 'TYPE_UNSPECIFIED' as any,
-  CHILDLINKEDSPAN = 'CHILD_LINKED_SPAN' as any,
-  PARENTLINKEDSPAN = 'PARENT_LINKED_SPAN' as any
+  Unspecified = 'TYPE_UNSPECIFIED',
+  Sent = 'SENT',
+  Received = 'RECEIVED',
 }
 
 /**
@@ -192,9 +192,9 @@ export interface SpanLinks {
  * covers the client-side wrapper around an RPC or other remote request.
  */
 export enum SpanKind {
-  SPANKINDUNSPECIFIED = 'SPAN_KIND_UNSPECIFIED' as any,
-  SERVER = 'SERVER' as any,
-  CLIENT = 'CLIENT' as any
+  Unspecified = 'SPAN_KIND_UNSPECIFIED',
+  Server = 'SERVER',
+  Client = 'CLIENT',
 }
 
 /**
@@ -337,9 +337,9 @@ export interface MessageEvent {
  * a received message.
  */
 export enum MessageEventType {
-  TYPEUNSPECIFIED = 'TYPE_UNSPECIFIED' as any,
-  SENT = 'SENT' as any,
-  RECEIVED = 'RECEIVED' as any
+  Unspecified = 'TYPE_UNSPECIFIED',
+  Sent = 'SENT',
+  Received = 'RECEIVED',
 }
 
 /**

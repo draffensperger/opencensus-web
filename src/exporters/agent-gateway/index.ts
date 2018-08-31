@@ -36,9 +36,9 @@ function hexToBase64(hexStr: string): string {
   return '';
 }
 
-function perfTimeDateStr(time: number) {
-  const originMillisWhole = Math.floor(performance.timeOrigin);
-  const originMillisFrac = performance.timeOrigin - originMillisWhole;
+function perfTimeDateStr(timeOrigin: number, time: number): string {
+  const originMillisWhole = Math.floor(timeOrigin);
+  const originMillisFrac = timeOrigin - originMillisWhole;
   const timeMillisWhole = Math.floor(time);
   const timeMillisFrac = time - timeMillisWhole;
   let combinedMillisWhole = originMillisWhole + timeMillisWhole;

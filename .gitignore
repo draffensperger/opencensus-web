@@ -26,3 +26,18 @@ node_modules
 
 # TypeScript build files
 build
+
+# nodejs
+npm-debug.log
+.nyc_output/
+build/
+
+#backup files
+*--
+*_backup
+
+#log files
+*.log
+
+#istanbul files
+coverage/

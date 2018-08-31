@@ -1,4 +1,3 @@
-/// <reference path="./custom.d.ts" />
 // tslint:disable
 /**
  * opencensus/proto/exporter/exporter.proto

@@ -122,9 +122,7 @@ export interface Span {
  *    "/http/server_latency": 300
  *    "abc.com/myattribute": true
  */
-export interface Attributes {
-  [key: string]: string|number|boolean;
-}
+export interface Attributes { [key: string]: string|number|boolean; }
 
 /**
  * The relationship of the current span relative to the linked span: child,
@@ -247,9 +245,9 @@ export interface MessageEvent {
  * a received message.
  */
 export enum MessageEventType {
-  TYPEUNSPECIFIED = 'TYPE_UNSPECIFIED' as any,
-  SENT = 'SENT' as any,
-  RECEIVED = 'RECEIVED' as any
+  Unspecified = 'TYPE_UNSPECIFIED',
+  Sent = 'SENT',
+  Received = 'RECEIVED',
 }
 
 /**

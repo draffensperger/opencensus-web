@@ -1,8 +1,6 @@
 import {Span} from './types';
 
-export interface SpanExporter {
-  exportSpans(spans: Span[]): void;
-}
+export interface SpanExporter { exportSpans(spans: Span[]): void; }
 
 const exporters: SpanExporter[] = [];
 
