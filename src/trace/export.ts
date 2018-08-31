@@ -1,7 +1,7 @@
 import {Span} from './span';
 
 export interface SpanExporter {
-  exportSpan(span: Span): void;
+  exportSpans(spans: Span[]): void;
 }
 
 const exporters: SpanExporter[] = [];
@@ -15,4 +15,8 @@ export function unregisterExporter(exporter: SpanExporter) {
   if (index > 0) exporters.splice(index, 1);
 }
 
-export function exportSpan(spans: Span) {}
+export function exportSpans(spans: Span[]) {
+  for (const exporter of exporters) {
+    exporter.exportSpans(spans);
+  }
+}
