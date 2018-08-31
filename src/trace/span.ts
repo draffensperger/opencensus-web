@@ -1,7 +1,8 @@
 export interface Trace {
   /**
    * A unique identifier for a trace. All spans from the same trace share the
-   * same `trace_id`. The ID is a 16-byte array.  This field is required.
+   * same `trace_id`. The ID is a 16-byte array encoded as a hex string.
+   * This field is required.
    */
   traceId: string;
   /** Base timestamp of the trace. This is in milliseconds since Unix epoch. */
@@ -12,7 +13,8 @@ export interface SpanContext {
   trace: Trace;
   /**
    * A unique identifier for a span within a trace, assigned when the span is
-   * created. The ID is an 8-byte array.  This field is required.
+   * created. The ID is an 8-byte array encoded as a hex string.
+   * This field is required.
    */
   spanId: string;
   /** Whether the current trace context has the sampling hint set. */
