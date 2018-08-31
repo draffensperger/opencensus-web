@@ -3,22 +3,20 @@ export interface Trace {
    * A unique identifier for a trace. All spans from the same trace share the
    * same `trace_id`. The ID is a 16-byte array.  This field is required.
    */
-  traceId?: string;
+  traceId: string;
+  /** Base timestamp of the trace. This is in milliseconds since Unix epoch. */
+  baseTime: number;
 }
 
-/**
- * A span represents a single operation within a trace. Spans can be nested to
- * form a trace tree. Often, a trace contains a root span that describes the
- * end-to-end latency, and one or more subspans for its sub-operations. A trace
- * can also contain multiple root spans, or none at all. Spans do not need to be
- * contiguous - there may be gaps or overlaps between spans in a trace.
- */
-export interface Span {
+export interface SpanContext {
+  trace: Trace;
   /**
    * A unique identifier for a span within a trace, assigned when the span is
    * created. The ID is an 8-byte array.  This field is required.
    */
-  spanId?: string;
+  spanId: string;
+  /** Whether the current trace context has the sampling hint set. */
+  isSampled: boolean;
   /**
    * The `tracestate` field conveys information about request position in
    * multiple distributed tracing graphs.  There can be a maximum of 32 members
@@ -33,6 +31,17 @@ export interface Span {
    * for more details about this field.
    */
   tracestate?: {[key: string]: string;};
+}
+
+/**
+ * A span represents a single operation within a trace. Spans can be nested to
+ * form a trace tree. Often, a trace contains a root span that describes the
+ * end-to-end latency, and one or more subspans for its sub-operations. A trace
+ * can also contain multiple root spans, or none at all. Spans do not need to be
+ * contiguous - there may be gaps or overlaps between spans in a trace.
+ */
+export interface Span {
+  spanContext: SpanContext;
   /**
    * The `span_id` of this span's parent span. If this is a root span, then this
    * field must be empty. The ID is an 8-byte array.
@@ -51,19 +60,23 @@ export interface Span {
    * two spans with the same name may be distinguished using `CLIENT` and
    * `SERVER` to identify queueing latency associated with the span.
    */
-  kind: SpanKind = SpanKind.Unspecified;
+  kind?: SpanKind;
   /**
    * The start time of the span. On the client side, this is the time kept by
    * the local machine where the span execution starts. On the server side, this
    * is the time when the server's application handler starts running.
+   *
+   * This is in milliseconds since the `baseTime` of the associated Trace.
    */
-  startTime?: Date;
+  startTime: number;
   /**
    * The end time of the span. On the client side, this is the time kept by the
    * local machine where the span execution ends. On the server side, this is
    * the time when the server application handler stops running.
+   *
+   * This is in milliseconds since the `baseTime` of the associated Trace.
    */
-  endTime?: Date;
+  endTime?: number;
   /**
    * A set of attributes on the span.
    */
@@ -76,10 +89,8 @@ export interface Span {
   messageEvents?: MessageEvent[];
   /** Span annotations. */
   annotations?: Annotation[];
-
   /** The included links. */
   links?: SpanLink[];
-
   /**
    * An optional final status for this span.
    */
@@ -187,7 +198,10 @@ export interface StackFrame {
 
 /** A text annotation with a set of attributes. */
 export interface Annotation {
-  /** The time the event occurred. */
+  /**
+   * The time the event occurred.
+   * This is in milliseconds since the `baseTime` of the associated Trace.
+   */
   time: number;
   /** A user-supplied message describing the event. */
   description: string;
@@ -197,7 +211,10 @@ export interface Annotation {
 
 /** An event describing a message sent/received between Spans. */
 export interface MessageEvent {
-  /** The time the event occurred. */
+  /**
+   * The time the event occurred.
+   * This is in milliseconds since the `baseTime` of the associated Trace.
+   */
   time: number;
   /**
    * The type of MessageEvent. Indicates whether the message was sent or
@@ -226,7 +243,6 @@ export interface MessageEvent {
  * Indicates whether the message was sent or received.   - TYPE_UNSPECIFIED:
  * Unknown event type.  - SENT: Indicates a sent message.  - RECEIVED: Indicates
  * a received message.
- * @enum {string}
  */
 export enum MessageEventType {
   TYPEUNSPECIFIED = 'TYPE_UNSPECIFIED' as any,
