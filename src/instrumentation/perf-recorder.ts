@@ -10,6 +10,7 @@ const longTasks: PerformanceLongTaskTiming[] = [];
 const RESOURCE_TIMING_BUFFER_SIZE = 2000;
 
 export interface GroupedPerfEntries {
+  timeOrigin: number;
   navigationTiming?: PerformanceNavigationTimingExtended;
   firstPaint?: PerformancePaintTiming;
   firstContentfulPaint?: PerformancePaintTiming;
@@ -41,13 +42,20 @@ function onLongTasks(entryList: PerformanceObserverEntryList) {
 
 export function getPerfEntries(): GroupedPerfEntries {
   if (!windowWithPerformance.performance) {
-    return {resourceTimings: [], longTasks: [], marks: [], measures: []};
+    return {
+      timeOrigin: 0,
+      resourceTimings: [],
+      longTasks: [],
+      marks: [],
+      measures: []
+    };
   }
 
   const perf = windowWithPerformance.performance;
 
   const entries: GroupedPerfEntries = {
-    resourceTimings: perf.getEntriesByType('resoruce'),
+    timeOrigin: getTimeOrigin(perf),
+    resourceTimings: perf.getEntriesByType('resource'),
     marks: perf.getEntriesByType('mark'),
     measures: perf.getEntriesByType('measure'),
     longTasks: longTasks.slice(),
@@ -74,4 +82,9 @@ export function clearPerfEntries() {
   windowWithPerformance.performance.clearResourceTimings();
   windowWithPerformance.performance.clearMarks();
   windowWithPerformance.performance.clearMeasures();
+}
+
+export function getTimeOrigin(perf: Performance): number {
+  if (perf.timeOrigin) return perf.timeOrigin;
+  return new Date().getTime() - perf.now();
 }

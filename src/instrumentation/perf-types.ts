@@ -115,5 +115,5 @@ export interface PerformanceLongTaskTiming extends PerformanceEntry {
 }
 
 export declare type WindowWithPerformance = Window & {
-  readonly PerformanceObserver: PerformanceObserver;
+  readonly PerformanceObserver?: PerformanceObserver;
 };

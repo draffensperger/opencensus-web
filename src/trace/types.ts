@@ -1,24 +1,30 @@
-export interface Trace {
+import {randomSpanId, randomTraceId} from './util';
+
+export type TraceId = string;
+export type SpanId = string;
+
+export class Trace {
   /**
-   * A unique identifier for a trace. All spans from the same trace share the
-   * same `trace_id`. The ID is a 16-byte array encoded as a hex string.
-   * This field is required.
+   * @param {baseTime} Base timestamp of the trace. This is in milliseconds
+   *     since Unix epoch.
+   * @param {traceId} A unique identifier for a trace. All spans from the same
+   *    trace share the same `trace_id`. The ID is a 16-byte array encoded as a
+   * hex string. This field is required.
    */
-  traceId: string;
-  /** Base timestamp of the trace. This is in milliseconds since Unix epoch. */
-  baseTime: number;
+  constructor(
+      readonly baseTime: number, readonly traceId: TraceId = randomTraceId()) {}
 }
 
 export interface SpanContext {
-  trace: Trace;
+  readonly trace: Trace;
   /**
    * A unique identifier for a span within a trace, assigned when the span is
    * created. The ID is an 8-byte array encoded as a hex string.
    * This field is required.
    */
-  spanId: string;
+  readonly spanId: SpanId;
   /** Whether the current trace context has the sampling hint set. */
-  isSampled: boolean;
+  readonly isSampled: boolean;
   /**
    * The `tracestate` field conveys information about request position in
    * multiple distributed tracing graphs.  There can be a maximum of 32 members
@@ -32,7 +38,7 @@ export interface SpanContext {
    * carriage returns, etc.  See the https://github.com/w3c/distributed-tracing
    * for more details about this field.
    */
-  tracestate?: {[key: string]: string;};
+  readonly tracestate?: {[key: string]: string;};
 }
 
 /**
@@ -42,35 +48,34 @@ export interface SpanContext {
  * can also contain multiple root spans, or none at all. Spans do not need to be
  * contiguous - there may be gaps or overlaps between spans in a trace.
  */
-export interface Span {
-  spanContext: SpanContext;
+export class Span {
+  /**
+   * @param {name} A description of the span's operation.  For example, the name
+   *     can be a qualified method name or a file name and a line number where
+   *     the operation is called. A best practice is to use the same display
+   *     name at the same call point in an application. This makes it easier to
+   *     correlate spans in different traces.  This field is required.
+   * @param {startTime} The start time of the span. On the client side, this is
+   *     the time kept by the local machine where the span execution starts. On
+   *     the server side, this is the time when the server's application handler
+   *     starts running. This is in milliseconds since the `baseTime` of the
+   *     associated Trace.
+   */
+  constructor(
+      readonly spanContext: SpanContext, readonly name: string,
+      readonly startTime: number) {}
+
   /**
    * The `span_id` of this span's parent span. If this is a root span, then this
    * field must be empty. The ID is an 8-byte array.
    */
   parentSpanId?: string;
   /**
-   * A description of the span's operation.  For example, the name can be a
-   * qualified method name or a file name and a line number where the operation
-   * is called. A best practice is to use the same display name at the same call
-   * point in an application. This makes it easier to correlate spans in
-   * different traces.  This field is required.
-   */
-  name: string;
-  /**
    * Distinguishes between spans generated in a particular context. For example,
    * two spans with the same name may be distinguished using `CLIENT` and
    * `SERVER` to identify queueing latency associated with the span.
    */
   kind?: SpanKind;
-  /**
-   * The start time of the span. On the client side, this is the time kept by
-   * the local machine where the span execution starts. On the server side, this
-   * is the time when the server's application handler starts running.
-   *
-   * This is in milliseconds since the `baseTime` of the associated Trace.
-   */
-  startTime: number;
   /**
    * The end time of the span. On the client side, this is the time kept by the
    * local machine where the span execution ends. On the server side, this is
@@ -122,7 +127,9 @@ export interface Span {
  *    "/http/server_latency": 300
  *    "abc.com/myattribute": true
  */
-export interface Attributes { [key: string]: string|number|boolean; }
+export interface Attributes {
+  [key: string]: string|number|boolean;
+}
 
 /**
  * The relationship of the current span relative to the linked span: child,

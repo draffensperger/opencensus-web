@@ -4,7 +4,8 @@ import {GroupedPerfEntries} from 'src/instrumentation/perf-recorder';
 describe('getInitialLoadSpans', () => {
   it('creates a parent span for overall load and child spans', () => {
     const perfEntries: GroupedPerfEntries = {
-      'resourceTimings': [],
+      timeOrigin: 1537281715830.2,
+      resourceTimings: [],
       'marks': [
         {
           'name': 'Zone',
