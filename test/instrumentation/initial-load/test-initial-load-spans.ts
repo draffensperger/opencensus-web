@@ -75,7 +75,8 @@ describe('getInitialLoadSpans', () => {
         'loadEventStart': 20967.899999999645,
         'loadEventEnd': 20985.30000000028,
         'type': 'navigate',
-        'redirectCount': 0
+        'redirectCount': 0,
+        toJSON: () => '',
       },
       'firstPaint': {
         'name': 'first-paint',

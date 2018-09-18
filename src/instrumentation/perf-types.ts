@@ -5,14 +5,21 @@
 export type PerformanceEntryList = PerformanceEntry[];
 export type DOMHighResTimeStamp = number;
 
+export interface PerformanceEntryIndex {
+  [index: string]: number|undefined|string;
+}
+
 export interface PerformanceServerTiming {
   readonly description: string;
   readonly duration: number;
   readonly name: string;
 }
 
+export type toJSONFunction = () => any;
+
 export interface PerformanceNavigationTimingExtended {
-  [index: string]: number|undefined|PerformanceServerTiming[]|string;
+  [index: string]: number|undefined|PerformanceServerTiming[]|string|
+      toJSONFunction;
 
   readonly initiatorType: 'navigation';
   readonly nextHopProtocol?: string;
@@ -21,8 +28,8 @@ export interface PerformanceNavigationTimingExtended {
   readonly encodedBodySize?: number;
   readonly decodedBodySize?: number;
   readonly serverTiming?: PerformanceServerTiming[];
-  readonly name?: string;
-  readonly entryType: undefined|'navigation';
+  readonly name: string;
+  readonly entryType: 'navigation';
 
   readonly startTime: number;
   readonly duration: number;
@@ -62,6 +69,8 @@ export interface PerformanceNavigationTimingExtended {
   readonly unloadEventEnd: number;
   readonly unloadEventStart: number;
   readonly workerStart: number;
+
+  toJSON: toJSONFunction;
 }
 
 export interface PerformanceObserverCallback {

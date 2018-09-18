@@ -1,6 +1,7 @@
-import {Annotation, Attributes, Span, Trace} from '../../trace/types';
+import {Annotation, Attributes, Span, SpanId, Trace} from '../../trace/types';
 import {randomSpanId} from '../../trace/util';
 import {GroupedPerfEntries} from '../perf-recorder';
+import {PerformanceEntryIndex} from '../perf-types';
 
 const PERFORMANCE_ENTRY_EVENTS: string[] = [
   'fetchStart',
@@ -37,16 +38,44 @@ const NAVIAGATION_TIMING_ATTRS: string[] = [
 
 
 export function getInitialLoadSpans(perfEntries: GroupedPerfEntries): Span[] {
-  const navigationSpan = getNavigationSpan(perfEntries);
+  const trace = new Trace(perfEntries.timeOrigin);
 
-  return [navigationSpan];
+  const navigationSpan = getNavigationSpan(perfEntries, trace);
+
+  // Create spans for the resource loads
+  const resourceSpans = perfEntries.resourceTimings.map(
+      (resourceTiming) => getResourceSpan(
+          resourceTiming, trace, navigationSpan.spanContext.spanId));
+
+  // Create spans for the long tasks
+
+  return [navigationSpan, ...resourceSpans];
 }
 
-function getNavigationSpan(perfEntries: GroupedPerfEntries): Span {
+function getResourceSpan(
+    resourceTiming: PerformanceResourceTiming, trace: Trace,
+    parentSpanId: SpanId): Span {
+  const spanContext = {trace, spanId: randomSpanId(), isSampled: true};
+  const name = `${getNamePrefix(resourceTiming)}.${resourceTiming.name}`;
+  const span = new Span(spanContext, name, resourceTiming.startTime);
+  span.parentSpanId = parentSpanId;
+  span.endTime = resourceTiming.responseEnd;
+  return span;
+}
+
+function getNamePrefix(resourceTiming: PerformanceResourceTiming): string {
+  if (resourceTiming.initiatorType === 'xmlhttprequest') return 'Xhr';
+  return titleCased(resourceTiming.initiatorType);
+}
+
+function titleCased(str: string): string {
+  return str[0].toUpperCase() + str.substring(1);
+}
+
+function getNavigationSpan(
+    perfEntries: GroupedPerfEntries, trace: Trace): Span {
   const lastResourceEnd =
       Math.max(...perfEntries.resourceTimings.map((t) => t.responseEnd));
-
-  const trace = new Trace(perfEntries.timeOrigin);
 
   const spanContext = {trace, spanId: randomSpanId(), isSampled: true};
   const navigationName = perfEntries.navigationTiming ?
@@ -65,15 +94,37 @@ function getNavigationAnnotations(perfEntries: GroupedPerfEntries):
   const navigation = perfEntries.navigationTiming;
   if (!navigation) return [];
 
-  const navAnnotations = [];
-  for (const annotationField of NAVIGATION_TIMING_EVENTS) {
-    const maybeTime = navigation[annotationField] as number | undefined;
-    if (maybeTime) {
-      navAnnotations.push({time: maybeTime, description: annotationField});
-    }
+  const navAnnotations = getAnnotations(navigation, NAVIGATION_TIMING_EVENTS);
+
+  const firstPaint = perfEntries.firstPaint;
+  if (firstPaint && firstPaint.startTime) {
+    navAnnotations.push(
+        {time: firstPaint.startTime, description: 'firstPaint'});
+  }
+  const firstContentfulPaint = perfEntries.firstContentfulPaint;
+  if (firstContentfulPaint && firstContentfulPaint.startTime) {
+    navAnnotations.push({
+      time: firstContentfulPaint.startTime,
+      description: 'firstContentfulPaint'
+    });
   }
 
   return navAnnotations;
+}
+
+function getAnnotations(
+    perfEntry: PerformanceEntry, annotationsFields: string[]): Annotation[] {
+  const annotations: Annotation[] = [];
+  for (const annotationField of NAVIGATION_TIMING_EVENTS) {
+    const maybeTime =
+        // tslint:disable:no-any
+        (perfEntry as any as PerformanceEntryIndex)[annotationField] as number |
+        undefined;
+    if (maybeTime) {
+      annotations.push({time: maybeTime, description: annotationField});
+    }
+  }
+  return annotations;
 }
 
 function getNavigationAttributes(perfEntries: GroupedPerfEntries): Attributes {
