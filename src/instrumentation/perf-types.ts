@@ -12,9 +12,11 @@ export interface PerformanceServerTiming {
 }
 
 export interface PerformanceNavigationTimingExtended {
+  [index: string]: number|undefined|PerformanceServerTiming[]|string;
+
   readonly initiatorType: 'navigation';
   readonly nextHopProtocol?: string;
-  readonly secureConnectionStart?: DOMHighResTimeStamp;
+  readonly secureConnectionStart?: number;
   readonly transferSize?: number;
   readonly encodedBodySize?: number;
   readonly decodedBodySize?: number;
