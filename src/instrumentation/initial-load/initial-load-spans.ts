@@ -1,12 +1,38 @@
-import {Annotation, Span, Trace} from '../../trace/types';
+import {Annotation, Attributes, Span, Trace} from '../../trace/types';
 import {randomSpanId} from '../../trace/util';
 import {GroupedPerfEntries} from '../perf-recorder';
 
+const PERFORMANCE_ENTRY_EVENTS: string[] = [
+  'fetchStart',
+  'domainLookupStart',
+  'domainLookupEnd',
+  'connectStart',
+  'connectEnd',
+  'secureConnectionStart',
+  'redirectStart',
+  'redirectEnd',
+  'requestStart',
+  'responseStart',
+  'responseEnd',
+];
+
 // These are properties of PerformanceNavigationTiming that will be turned into
 // span annotations on the navigation span.
-const NAVIGATION_TIMING_EVENTS = [
-  'domLoading', 'domInteractive', 'domContentLoaded', 'domComplete',
-  'loadEventStart', 'loadEventEnd'
+const NAVIGATION_TIMING_EVENTS: string[] = [
+  ...PERFORMANCE_ENTRY_EVENTS,
+  'domLoading',
+  'domInteractive',
+  'domContentLoaded',
+  'domComplete',
+  'loadEventStart',
+  'loadEventEnd',
+  'unloadEventStart',
+  'unloadEventEnd',
+];
+
+const NAVIAGATION_TIMING_ATTRS: string[] = [
+  'decodedBodySize', 'encodedBodySize', 'nextHopProtocol', 'redirectCount',
+  'type'
 ];
 
 
@@ -29,6 +55,7 @@ function getNavigationSpan(perfEntries: GroupedPerfEntries): Span {
   const navigationSpan = new Span(spanContext, `Nav.${navigationName}`, 0);
   navigationSpan.endTime = lastResourceEnd;
   navigationSpan.annotations = getNavigationAnnotations(perfEntries);
+  navigationSpan.attributes = getNavigationAttributes(perfEntries);
 
   return navigationSpan;
 }
@@ -47,4 +74,18 @@ function getNavigationAnnotations(perfEntries: GroupedPerfEntries):
   }
 
   return navAnnotations;
+}
+
+function getNavigationAttributes(perfEntries: GroupedPerfEntries): Attributes {
+  const navigation = perfEntries.navigationTiming;
+  if (!navigation) return {};
+
+  const navigationAttrs: Attributes = {};
+  for (const attrField of NAVIAGATION_TIMING_ATTRS) {
+    const maybeValue = (navigation[attrField]) as string | number;
+    if (maybeValue) {
+      navigationAttrs[attrField] = maybeValue;
+    }
+  }
+  return navigationAttrs;
 }
