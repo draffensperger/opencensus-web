@@ -1,4 +1,4 @@
-import {PerformanceFrameTiming, PerformanceLongTaskTiming, PerformanceObserverEntryList, PerformancePaintTiming, WindowWithPerformance} from './perf-types';
+import {PerformanceLongTaskTiming, PerformanceNavigationTimingExtended, PerformanceObserverEntryList, PerformancePaintTiming, WindowWithPerformance} from './perf-types';
 
 // Cast `window` to have PerformanceObserver.
 const windowWithPerformance = window as WindowWithPerformance;
@@ -10,7 +10,7 @@ const longTasks: PerformanceLongTaskTiming[] = [];
 const RESOURCE_TIMING_BUFFER_SIZE = 2000;
 
 export interface GroupedPerfEntries {
-  navigationTiming?: PerformanceNavigationTiming;
+  navigationTiming?: PerformanceNavigationTimingExtended;
   firstPaint?: PerformancePaintTiming;
   firstContentfulPaint?: PerformancePaintTiming;
   resourceTimings: PerformanceResourceTiming[];

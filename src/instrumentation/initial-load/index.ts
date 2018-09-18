@@ -15,3 +15,5 @@ export function instrumentInitialLoad() {
     }, WAIT_TIME_AFTER_LOAD_MS);
   });
 }
+
+export {getInitialLoadSpans} from './initial-load-spans';
