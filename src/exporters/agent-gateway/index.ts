@@ -18,7 +18,9 @@ export class AgentGatewayExporter implements SpanExporter {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', this.endpoint);
     xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-    xhr.send(JSON.stringify(request));
+    console.log(request);
+    const reqJson = JSON.stringify(request);
+    xhr.send(reqJson);
     xhr.onreadystatechange = () => {
       if (xhr.readyState !== XHR_READY_STATE_DONE) return;
       if (xhr.status !== HTTP_SUCCESS_STATUS) {

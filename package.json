@@ -15,7 +15,9 @@
     "posttest": "npm run check",
     "test": "karma start --single-run --browsers ChromeHeadless",
     "test:start": "karma start",
-    "test:restart": "while true; do npm run test:start; sleep 1; done"
+    "test:restart": "while true; do npm run test:start; sleep 1; done",
+    "start:webpack": "webpack",
+    "start:webpack-server": "webpack-dev-server"
   },
   "keywords": ["opencensus", "tracing"],
   "author": "OpenCensus Authors",
@@ -33,7 +35,10 @@
     "karma-commonjs": "^1.0.0",
     "karma-jasmine": "^1.1.2",
     "karma-typescript": "^3.0.13",
-    "typescript": "~2.7.2"
+    "typescript": "~2.7.2",
+    "webpack": "^4.19.1",
+    "webpack-cli": "^3.1.1",
+    "webpack-dev-server": "^3.1.8"
   },
   "dependencies": {
     "swagger-js-codegen": "^1.12.0"

@@ -1,7 +1,7 @@
 import {Annotation, Attributes, Span, SpanId, Trace} from '../../trace/types';
 import {randomSpanId} from '../../trace/util';
 import {GroupedPerfEntries} from '../perf-recorder';
-import {PerformanceEntryIndex} from '../perf-types';
+import {PerformanceEntryIndex, PerformanceLongTaskTiming} from '../perf-types';
 
 const PERFORMANCE_ENTRY_EVENTS: string[] = [
   'fetchStart',
@@ -31,16 +31,29 @@ const NAVIGATION_TIMING_EVENTS: string[] = [
   'unloadEventEnd',
 ];
 
-const NAVIAGATION_TIMING_ATTRS: string[] = [
-  'decodedBodySize', 'encodedBodySize', 'nextHopProtocol', 'redirectCount',
-  'type'
-];
+const RESOURCE_TIMING_ATTRS: string[] =
+    ['decodedBodySize', 'encodedBodySize', 'transferSize', 'nextHopProtocol'];
 
+const NAVIGATION_TIMING_ATTRS: string[] =
+    [...RESOURCE_TIMING_ATTRS, 'redirectCount', 'type'];
 
-export function getInitialLoadSpans(perfEntries: GroupedPerfEntries): Span[] {
+export function getInitialLoadSpans(
+    perfEntries: GroupedPerfEntries, navigationTraceId: string|undefined,
+    navigationSpanId: string|undefined): Span[] {
+  console.log(perfEntries);
   const trace = new Trace(perfEntries.timeOrigin);
 
   const navigationSpan = getNavigationSpan(perfEntries, trace);
+
+  // TODO:
+  // - initial page load needs to be a separate span
+  // - the sameProcessAsParentSpan should be set to true for everything
+  // - add annotations for the resource timing spans
+  // - add in the mark/measure spans (exclude the Zone ones, but make this
+  //   configurable)
+
+
+  // Next big step is deploying it
 
   // Create spans for the resource loads
   const resourceSpans = perfEntries.resourceTimings.map(
@@ -48,8 +61,13 @@ export function getInitialLoadSpans(perfEntries: GroupedPerfEntries): Span[] {
           resourceTiming, trace, navigationSpan.spanContext.spanId));
 
   // Create spans for the long tasks
+  const longTaskSpans = perfEntries.longTasks.map(
+      (longTask) =>
+          getLongTaskSpan(longTask, trace, navigationSpan.spanContext.spanId));
 
-  return [navigationSpan, ...resourceSpans];
+  const spans = [navigationSpan, ...resourceSpans, ...longTaskSpans];
+  console.log(spans);
+  return spans;
 }
 
 function getResourceSpan(
@@ -60,12 +78,26 @@ function getResourceSpan(
   const span = new Span(spanContext, name, resourceTiming.startTime);
   span.parentSpanId = parentSpanId;
   span.endTime = resourceTiming.responseEnd;
+  span.attributes = getAttributes(resourceTiming, RESOURCE_TIMING_ATTRS);
+  return span;
+}
+
+function getLongTaskSpan(
+    longTask: PerformanceLongTaskTiming, trace: Trace,
+    parentSpanId: SpanId): Span {
+  const spanContext = {trace, spanId: randomSpanId(), isSampled: true};
+  const name = 'Long JS task';
+  const span = new Span(spanContext, name, longTask.startTime);
+  span.parentSpanId = parentSpanId;
+  span.endTime = longTask.startTime + longTask.duration;
   return span;
 }
 
 function getNamePrefix(resourceTiming: PerformanceResourceTiming): string {
-  if (resourceTiming.initiatorType === 'xmlhttprequest') return 'Xhr';
-  return titleCased(resourceTiming.initiatorType);
+  const initiator = resourceTiming.initiatorType;
+  if (initiator === 'xmlhttprequest') return 'Xhr';
+  if (initiator === '') return 'NavRes';
+  return titleCased(initiator);
 }
 
 function titleCased(str: string): string {
@@ -117,7 +149,7 @@ function getAnnotations(
   const annotations: Annotation[] = [];
   for (const annotationField of NAVIGATION_TIMING_EVENTS) {
     const maybeTime =
-        // tslint:disable:no-any
+        // tslint:disable:no-any Cast to enable index signature
         (perfEntry as any as PerformanceEntryIndex)[annotationField] as number |
         undefined;
     if (maybeTime) {
@@ -130,13 +162,20 @@ function getAnnotations(
 function getNavigationAttributes(perfEntries: GroupedPerfEntries): Attributes {
   const navigation = perfEntries.navigationTiming;
   if (!navigation) return {};
+  return getAttributes(navigation, NAVIGATION_TIMING_ATTRS);
+}
 
-  const navigationAttrs: Attributes = {};
-  for (const attrField of NAVIAGATION_TIMING_ATTRS) {
-    const maybeValue = (navigation[attrField]) as string | number;
+function getAttributes(
+    perfEntry: PerformanceEntry, attrFields: string[]): Attributes {
+  const attrs: Attributes = {};
+  for (const attrField of attrFields) {
+    // tslint:disable:no-any Cast to enable index signature
+    const maybeValue =
+        ((perfEntry as any as PerformanceEntryIndex)[attrField]) as string |
+        number | undefined;
     if (maybeValue) {
-      navigationAttrs[attrField] = maybeValue;
+      attrs[attrField] = maybeValue;
     }
   }
-  return navigationAttrs;
+  return attrs;
 }
