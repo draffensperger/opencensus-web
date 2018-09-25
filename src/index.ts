@@ -19,15 +19,13 @@ export declare type WindowWithOpenCensusConfig = Window & {
   openCensusConfig?: OpenCensusConfig;
 };
 
-export function startOpenCensusWeb() {
-  const windowWithConfig = window as WindowWithOpenCensusConfig;
-  if (!windowWithConfig.openCensusConfig) return;
-  const config = windowWithConfig.openCensusConfig;
-  if (!config.agentEndpoint) return;
+export function startOpenCensusWeb(config: OpenCensusConfig|undefined) {
+  if (!config || !config.agentEndpoint) return;
   console.log('Starting OpenCensus web');
 
   registerExporter(new AgentGatewayExporter(config.agentEndpoint));
   instrumentAll(config.navigation);
 }
 
-startOpenCensusWeb();
+const windowWithConfig = window as WindowWithOpenCensusConfig;
+startOpenCensusWeb(windowWithConfig.openCensusConfig);
