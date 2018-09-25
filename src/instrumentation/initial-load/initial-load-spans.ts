@@ -1,7 +1,8 @@
-import {Annotation, Attributes, Span, SpanId, Trace} from '../../trace/types';
+import {NavigationConfig} from '../..';
+import {Annotation, Attributes, Span, SpanId, Trace, TraceId} from '../../trace/types';
 import {randomSpanId} from '../../trace/util';
 import {GroupedPerfEntries} from '../perf-recorder';
-import {PerformanceEntryIndex, PerformanceLongTaskTiming} from '../perf-types';
+import {PerformanceEntryIndex, PerformanceLongTaskTiming, PerformanceNavigationTimingExtended} from '../perf-types';
 
 const PERFORMANCE_ENTRY_EVENTS: string[] = [
   'fetchStart',
@@ -20,7 +21,6 @@ const PERFORMANCE_ENTRY_EVENTS: string[] = [
 // These are properties of PerformanceNavigationTiming that will be turned into
 // span annotations on the navigation span.
 const NAVIGATION_TIMING_EVENTS: string[] = [
-  ...PERFORMANCE_ENTRY_EVENTS,
   'domLoading',
   'domInteractive',
   'domContentLoaded',
@@ -38,12 +38,23 @@ const NAVIGATION_TIMING_ATTRS: string[] =
     [...RESOURCE_TIMING_ATTRS, 'redirectCount', 'type'];
 
 export function getInitialLoadSpans(
-    perfEntries: GroupedPerfEntries, navigationTraceId: string|undefined,
-    navigationSpanId: string|undefined): Span[] {
+    perfEntries: GroupedPerfEntries,
+    navigationConfig: NavigationConfig|undefined): Span[] {
   console.log(perfEntries);
-  const trace = new Trace(perfEntries.timeOrigin);
 
-  const navigationSpan = getNavigationSpan(perfEntries, trace);
+  const timeOrigin = calcTimeOrigin(
+      perfEntries.timeOrigin, perfEntries.navigationTiming, navigationConfig);
+  const trace = new Trace(timeOrigin);
+  if (navigationConfig && navigationConfig.traceId) {
+    trace.traceId = navigationConfig.traceId as TraceId;
+  }
+
+  const navigationParentSpanId =
+      navigationConfig && navigationConfig.parentSpanId ?
+      navigationConfig.parentSpanId :
+      undefined;
+  const navigationSpans =
+      getNavigationSpans(perfEntries, trace, navigationParentSpanId);
 
   // TODO:
   // - initial page load needs to be a separate span
@@ -58,16 +69,51 @@ export function getInitialLoadSpans(
   // Create spans for the resource loads
   const resourceSpans = perfEntries.resourceTimings.map(
       (resourceTiming) => getResourceSpan(
-          resourceTiming, trace, navigationSpan.spanContext.spanId));
+          resourceTiming, trace, navigationSpans[0].spanContext.spanId));
 
   // Create spans for the long tasks
   const longTaskSpans = perfEntries.longTasks.map(
-      (longTask) =>
-          getLongTaskSpan(longTask, trace, navigationSpan.spanContext.spanId));
+      (longTask) => getLongTaskSpan(
+          longTask, trace, navigationSpans[0].spanContext.spanId));
 
-  const spans = [navigationSpan, ...resourceSpans, ...longTaskSpans];
+  const spans = [...navigationSpans, ...resourceSpans, ...longTaskSpans];
   console.log(spans);
   return spans;
+}
+
+function calcTimeOrigin(
+    perfTimeOrigin: number,
+    navigationTiming: PerformanceNavigationTimingExtended|undefined,
+    navigationConfig: NavigationConfig|undefined): number {
+  if (!navigationConfig || !navigationConfig.start ||
+      !navigationConfig.elapsed || !navigationTiming ||
+      !navigationTiming.requestStart || !navigationTiming.responseStart) {
+    // Not enough data, so just use perf time origin.
+    console.log('Not enough navigation timing to calc origin');
+    return perfTimeOrigin;
+  }
+
+  const clientStart = navigationTiming.requestStart;
+  const clientEnd = navigationTiming.responseStart;
+
+  const serverElapsed = navigationConfig.elapsed;
+  const clientElapsed = clientEnd - clientStart;
+
+  if (serverElapsed > clientElapsed) {
+    // Server time is more than client time, which we don't expect, so just use
+    // default time origin.
+    console.log('Server time is more than client time');
+    return perfTimeOrigin;
+  }
+
+  const networkTime = clientElapsed - serverElapsed;
+  console.log(`Network time: ${networkTime}`);
+  const halfNetworkTime = networkTime / 2;
+
+  const clientStartInServerTime = navigationConfig.start - halfNetworkTime;
+
+  const perfTimeOriginInServerTime = clientStartInServerTime - clientStart;
+  return perfTimeOriginInServerTime;
 }
 
 function getResourceSpan(
@@ -104,21 +150,46 @@ function titleCased(str: string): string {
   return str[0].toUpperCase() + str.substring(1);
 }
 
-function getNavigationSpan(
-    perfEntries: GroupedPerfEntries, trace: Trace): Span {
+function getNavigationSpans(
+    perfEntries: GroupedPerfEntries, trace: Trace,
+    navigationParentSpanId: string|undefined): Span[] {
   const lastResourceEnd =
       Math.max(...perfEntries.resourceTimings.map((t) => t.responseEnd));
+  const navigationTiming = perfEntries.navigationTiming;
+  if (!navigationTiming) return [];
+  const loadEventEnd =
+      navigationTiming.loadEventEnd ? navigationTiming.loadEventEnd : 0;
+  const overallNavigationEnd = Math.max(lastResourceEnd, loadEventEnd);
 
   const spanContext = {trace, spanId: randomSpanId(), isSampled: true};
   const navigationName = perfEntries.navigationTiming ?
       perfEntries.navigationTiming.name :
       location.href;
-  const navigationSpan = new Span(spanContext, `Nav.${navigationName}`, 0);
-  navigationSpan.endTime = lastResourceEnd;
-  navigationSpan.annotations = getNavigationAnnotations(perfEntries);
-  navigationSpan.attributes = getNavigationAttributes(perfEntries);
+  const overallNavigationSpan =
+      new Span(spanContext, `Nav.${navigationName}`, 0);
+  overallNavigationSpan.endTime = overallNavigationEnd;
+  overallNavigationSpan.annotations = getNavigationAnnotations(perfEntries);
+  overallNavigationSpan.attributes = getNavigationAttributes(perfEntries);
 
-  return navigationSpan;
+  const initialLoadSpanContext = {
+    trace,
+    spanId: randomSpanId(),
+    isSampled: true
+  };
+  if (navigationParentSpanId) {
+    initialLoadSpanContext.spanId = navigationParentSpanId;
+  }
+  const initialLoadSpan = new Span(
+      initialLoadSpanContext, `Load.${navigationName}`,
+      navigationTiming.fetchStart);
+  initialLoadSpan.endTime = navigationTiming.responseEnd;
+  initialLoadSpan.parentSpanId = overallNavigationSpan.spanContext.spanId;
+  initialLoadSpan.attributes =
+      getAttributes(navigationTiming, RESOURCE_TIMING_ATTRS);
+  initialLoadSpan.annotations =
+      getAnnotations(navigationTiming, PERFORMANCE_ENTRY_EVENTS);
+
+  return [overallNavigationSpan, initialLoadSpan];
 }
 
 function getNavigationAnnotations(perfEntries: GroupedPerfEntries):
@@ -147,7 +218,7 @@ function getNavigationAnnotations(perfEntries: GroupedPerfEntries):
 function getAnnotations(
     perfEntry: PerformanceEntry, annotationsFields: string[]): Annotation[] {
   const annotations: Annotation[] = [];
-  for (const annotationField of NAVIGATION_TIMING_EVENTS) {
+  for (const annotationField of annotationsFields) {
     const maybeTime =
         // tslint:disable:no-any Cast to enable index signature
         (perfEntry as any as PerformanceEntryIndex)[annotationField] as number |

@@ -1,5 +1,5 @@
+import {NavigationConfig} from '../..';
 import {exportSpans} from '../../trace/export';
-
 import {clearPerfEntries, getPerfEntries} from '../perf-recorder';
 
 import {getInitialLoadSpans} from './initial-load-spans';
@@ -7,24 +7,22 @@ import {getInitialLoadSpans} from './initial-load-spans';
 // How long to wait for DOMContentLoaded to create the initial load span.
 const WAIT_TIME_AFTER_LOAD_MS = 2000;
 
-export function instrumentInitialLoad(
-    navigationTraceId: string|undefined, navigationSpanId: string|undefined) {
+export function instrumentInitialLoad(navigationConfig: NavigationConfig|
+                                      undefined) {
   if (document.readyState === 'complete') {
-    exportInitialLoadSpans(navigationTraceId, navigationSpanId);
+    exportInitialLoadSpans(navigationConfig);
   } else {
     window.addEventListener('load', () => {
-      exportInitialLoadSpans(navigationTraceId, navigationSpanId);
+      exportInitialLoadSpans(navigationConfig);
     });
   }
 }
 
 export {getInitialLoadSpans} from './initial-load-spans';
 
-function exportInitialLoadSpans(
-    navigationTraceId: string|undefined, navigationSpanId: string|undefined) {
+function exportInitialLoadSpans(navigationConfig: NavigationConfig|undefined) {
   setTimeout(() => {
-    exportSpans(getInitialLoadSpans(
-        getPerfEntries(), navigationTraceId, navigationSpanId));
+    exportSpans(getInitialLoadSpans(getPerfEntries(), navigationConfig));
     clearPerfEntries();
   }, WAIT_TIME_AFTER_LOAD_MS);
 }

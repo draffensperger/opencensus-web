@@ -94,7 +94,7 @@ describe('getInitialLoadSpans', () => {
       }
     };
 
-    const spans = getInitialLoadSpans(perfEntries);
+    const spans = getInitialLoadSpans(perfEntries, undefined, undefined);
 
     expect(spans).toEqual([]);
   });

@@ -1,8 +1,9 @@
+import {NavigationConfig} from '..';
+
 import {instrumentInitialLoad} from './initial-load';
 import {recordPerfEntries} from './perf-recorder';
 
-export function instrumentAll(
-    navigationTraceId: string|undefined, navigationSpanId: string|undefined) {
+export function instrumentAll(navigationConfig: NavigationConfig|undefined) {
   recordPerfEntries();
-  instrumentInitialLoad(navigationTraceId, navigationSpanId);
+  instrumentInitialLoad(navigationConfig);
 }

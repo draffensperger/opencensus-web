@@ -3,10 +3,16 @@ import {instrumentAll} from './instrumentation';
 import {registerExporter} from './trace/export';
 import {MessageEventType, Span, SpanContext, SpanKind, SpanLinkType, Trace} from './trace/types';
 
+export interface NavigationConfig {
+  traceId?: string;
+  parentSpanId?: string;
+  start?: number;
+  elapsed?: number;
+}
+
 export interface OpenCensusConfig {
   agentEndpoint?: string;
-  navigationTraceId?: string;
-  navigationSpanId?: string;
+  navigation?: NavigationConfig;
 }
 
 export declare type WindowWithOpenCensusConfig = Window & {
@@ -21,7 +27,7 @@ export function startOpenCensusWeb() {
   console.log('Starting OpenCensus web');
 
   registerExporter(new AgentGatewayExporter(config.agentEndpoint));
-  instrumentAll(config.navigationTraceId, config.navigationSpanId);
+  instrumentAll(config.navigation);
 }
 
 startOpenCensusWeb();

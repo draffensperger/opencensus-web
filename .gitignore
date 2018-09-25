@@ -25,7 +25,8 @@ TAGS
 node_modules
 
 # TypeScript build files
-build
+build/
+dist/
 
 # nodejs
 npm-debug.log

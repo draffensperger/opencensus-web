@@ -4,15 +4,17 @@ export type TraceId = string;
 export type SpanId = string;
 
 export class Trace {
-  /**
-   * @param {baseTime} Base timestamp of the trace. This is in milliseconds
-   *     since Unix epoch.
-   * @param {traceId} A unique identifier for a trace. All spans from the same
-   *    trace share the same `trace_id`. The ID is a 16-byte array encoded as a
-   * hex string. This field is required.
-   */
   constructor(
-      readonly baseTime: number, readonly traceId: TraceId = randomTraceId()) {}
+      /**
+         Base timestamp of the trace. This is in milliseconds since Unix epoch.
+       */
+      readonly baseTime: number,
+      /**
+       * A unique identifier for a trace. All spans from the same
+       *    trace share the same `trace_id`. The ID is a 16-byte array encoded
+       * as a hex string. This field is required.
+       */
+      public traceId: TraceId = randomTraceId()) {}
 }
 
 export interface SpanContext {
