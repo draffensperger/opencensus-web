@@ -1,24 +1,28 @@
 {
-  "name": "@opencensus/exporter-ocagent-rest",
+  "name": "@opencensus/web-exporter-ocagent",
   "version": "0.0.1",
-  "description":
-    "OpenCensus Agent Exporter REST allows user to send collected trace to the OpenCensus Agent via HTTP/JSON.",
+  "description": "OpenCensus Agent Exporter web allows user to send collected traces to the OpenCensus Agent via HTTP/JSON in a browser.",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
   "scripts": {
-    "test": "nyc mocha build/test/**/*.js",
-    "codecov": "nyc report --reporter=json && codecov -f coverage/*.json",
+    "test": "karma start --single-run --browsers ChromeHeadless",
+    "test:start": "karma start",
+    "test:restart": "while true; do npm run test:start; sleep 1; done",
     "clean": "rimraf build/*",
     "check": "gts check",
     "compile": "tsc -p .",
-    "watch": "nodemon --exec tsc -p .",
     "fix": "gts fix",
     "prepare": "npm run compile",
     "pretest": "npm run compile",
     "posttest": "npm run check"
   },
   "repository": "census-instrumentation/opencensus-web",
-  "keywords": ["opencensus", "browser", "tracing", "profiling"],
+  "keywords": [
+    "opencensus",
+    "browser",
+    "tracing",
+    "profiling"
+  ],
   "author": "OpenCensus Authors",
   "license": "Apache-2.0",
   "engines": {
@@ -36,17 +40,25 @@
     "access": "public"
   },
   "nodemonConfig": {
-    "ignore": ["build/*"],
+    "ignore": [
+      "build/*"
+    ],
     "ext": "ts"
   },
   "devDependencies": {
-    "codecov": "^3.1.0",
+    "@types/jasmine": "^3.3.4",
     "gts": "^0.9.0",
-    "nyc": "^13.1.0",
+    "jasmine-core": "^3.3.0",
+    "karma": "^3.1.4",
+    "karma-chrome-launcher": "^2.2.0",
+    "karma-commonjs": "^1.0.0",
+    "karma-jasmine": "^2.0.1",
+    "karma-typescript": "^3.0.13",
     "rimraf": "^2.6.2",
-    "typescript": "~2.7.2"
+    "typescript": "~2.8.1"
   },
   "dependencies": {
-    "@opencensus/core": "0.0.8"
+    "@opencensus/core": "0.0.8",
+    "@types/jasmine": "^3.3.4"
   }
 }
