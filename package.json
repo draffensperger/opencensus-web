@@ -1,8 +1,7 @@
 {
   "name": "@opencensus/opencensus-web-base",
   "version": "0.0.1",
-  "description":
-    "OpenCensus is a toolkit for collecting application performance and behavior data.",
+  "description": "OpenCensus is a toolkit for collecting application performance and behavior data.",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
   "repository": "census-instrumentation/opencensus-web",
@@ -14,7 +13,12 @@
     "bump": "lerna publish",
     "codecov": "lerna run codecov"
   },
-  "keywords": ["opencensus", "browser", "tracing", "profiling"],
+  "keywords": [
+    "opencensus",
+    "browser",
+    "tracing",
+    "profiling"
+  ],
   "author": "OpenCensus Authors",
   "license": "Apache-2.0",
   "files": [
