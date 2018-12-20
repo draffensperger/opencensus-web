@@ -1,0 +1,52 @@
+{
+  "name": "@opencensus/exporter-ocagent-rest",
+  "version": "0.0.1",
+  "description":
+    "OpenCensus Agent Exporter REST allows user to send collected trace to the OpenCensus Agent via HTTP/JSON.",
+  "main": "build/src/index.js",
+  "types": "build/src/index.d.ts",
+  "scripts": {
+    "test": "nyc mocha build/test/**/*.js",
+    "codecov": "nyc report --reporter=json && codecov -f coverage/*.json",
+    "clean": "rimraf build/*",
+    "check": "gts check",
+    "compile": "tsc -p .",
+    "watch": "nodemon --exec tsc -p .",
+    "fix": "gts fix",
+    "prepare": "npm run compile",
+    "pretest": "npm run compile",
+    "posttest": "npm run check"
+  },
+  "repository": "census-instrumentation/opencensus-web",
+  "keywords": ["opencensus", "browser", "tracing", "profiling"],
+  "author": "OpenCensus Authors",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=6.0"
+  },
+  "files": [
+    "build/src/**/*.js",
+    "build/src/**/*.d.ts",
+    "doc",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "nodemonConfig": {
+    "ignore": ["build/*"],
+    "ext": "ts"
+  },
+  "devDependencies": {
+    "codecov": "^3.1.0",
+    "gts": "^0.9.0",
+    "nyc": "^13.1.0",
+    "rimraf": "^2.6.2",
+    "typescript": "~2.7.2"
+  },
+  "dependencies": {
+    "@opencensus/core": "0.0.8"
+  }
+}
